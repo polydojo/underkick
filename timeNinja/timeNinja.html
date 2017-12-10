@@ -1,0 +1,309 @@
+<!--
+    TimeNinja: A simple app for time tracking.
+    Copyright (C) 2017  Polydojo, Inc.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="lib/pure-min.css">
+    <link rel="stylesheet" href="app.css">
+
+    <title>TimeNinja</title>
+</head>
+<body>
+    <div id="render-target"></div>
+    
+    <footer class="small centerAlign">
+        <br><br><br><br>
+        <hr>
+        <p>TimeNinja - Built with Underkick.</p>
+        <p>&copy; 2017 Polydojo, Inc.</p>
+        <p>
+    </footer>
+    
+    <script type="text/template" id="source-template">   <!-- //> -->
+        <header>
+            <h2>{{tn.APP_NAME}}</h2>
+            <div class="pure-menu pure-menu-horizontal">
+                <ul class="pure-menu-list">
+                    <li class="pure-menu-item"><a href="#tracker" class="pure-menu-link">Track</a></li>
+                    <li class="pure-menu-item"><a href="#viewer" class="pure-menu-link">Filter</a></li>
+                    <li class="pure-menu-item"><a href="#syncer" class="pure-menu-link">Sync</a></li>
+                    <li class="pure-menu-item"><a href="#about" class="pure-menu-link">About</a></li>
+                    <li class="pure-menu-item"><a href="#license" class="pure-menu-link">License</a></li>
+                </ul>
+            </div>
+            <hr>
+        </header>
+        <div id="tracker" class="{{uk.if(tn.router.o.activeId() !== 'tracker', 'hidden')}}">
+            <h2>Time Tracker</h2>
+            <% if (_.contains(["still", "editing"], tn.tracker.c.mode())) { %>
+                <form id="trackingForm" class="pure-form pure-g" data-on="submit" data-call=".tracker.onSubmit_tracking">
+                    <div class="pure-u-1-4">
+                        <input name="project" value="{{tn.tracker.o.project()}}" list="project_datalist"
+                            class="pure-input-1" placeholder="Project" required
+                        >
+                        <span class="pure-form-message">Project Name</span>
+                        <datalist id="project_datalist">
+                            <% _.each(_.uniq(_.pluck(tn.tracker.o.activityList(), "project")), function (project) { %>
+                                <option value="{{project}}">
+                            <% }); %>
+                        </datalist>
+                    </div>
+                    <div class="pure-u-1-4">
+                        <input name="task" value="{{tn.tracker.o.task()}}" list="task_datalist"
+                            class="pure-input-1" placeholder="Task" required
+                        >
+                        <span class="pure-form-message">Task Description</span>
+                        <datalist id="task_datalist">
+                            <% _.each(_.uniq(_.pluck(tn.tracker.o.activityList(), "task")), function (task) { %>
+                                <option value="{{task}}">
+                            <% }); %>
+                        </datalist>
+                    </div>
+                    <div class="pure-u-1-4">
+                        <input name="hourlyCharge" value="{{tn.tracker.o.hourlyCharge()}}" list="hourlyCharge_datalist"
+                            class="pure-input-1" placeholder="Hourly Charge" required
+                        >
+                        <span class="pure-form-message">Hourly Charge</span>
+                        <datalist id="hourlyCharge_datalist">
+                            <% _.each(_.uniq(_.pluck(tn.tracker.o.activityList(), "hourlyCharge")), function (hourlyCharge) { %>
+                                <option value="{{hourlyCharge}}">
+                            <% }); %>
+                        </datalist>
+                    </div>
+                    <% if (tn.tracker.c.mode() === "still") { %>
+                        <div class="pure-u-1-4">
+                            <button class="pure-button pure-input-1" style="border: 1px solid gray;"> Start Tracking!</button>
+                        </div>
+                    <% } else { %>
+                        <div class="pure-u-1-4">
+                            <input type="hidden" name="idUnderEdit" value="{{tn.tracker.o.idUnderEdit()}}" class="hidden" required>
+                            <center><button class="pure-button pure-input-1">Save Changes!</button></center>
+                        </div>
+                        <div class="pure-u-1-2">
+                            <input name="minuteCount" value="{{tn.tracker.o.minuteCount()}}"
+                                class="pure-input-1" placeholder="Minutes Spent" required>
+                            <span class="pure-form-message">Minutes Spent</span>
+                        </div>
+                        <div class="pure-u-1-2">
+                            <input name="startDateStr" value="{{tn.tracker.o.startDateStr()}}"
+                                class="pure-input-1" placeholder="Eg. 28 May 2017 11:30 AM" required>
+                            <span class="pure-form-message">Start Time</span>
+                        </div>
+                    <% } %>
+                </form>
+            <% } else { %>
+                <center>
+                    <h2>Tracking is ON.</h2>
+                    <p>
+                        <button class="pure-button" data-on="click" data-call=".tracker.onClick_stopTracking">
+                            <big><big>Stop Tracking!</big></big>
+                        </button>
+                    </p>
+                    <span>Tracking Details:</span>
+                    <table class="pure-table">
+                        <tbody>
+                            <tr>    <td>Project</td>    <td>{{tn.tracker.o.project()}}</td>                             </tr>
+                            <tr>    <td>Task</td>       <td>{{tn.tracker.o.task()}}</td>                                </tr>
+                            <tr>    <td>Time</td>       <td>{{tn.formatTimeDelta(tn.tracker.c.trackedTime())}}</td>     </tr>
+                            <tr>    <td>Charge</td>     <td>{{(tn.tracker.c.trackedCharge()).toFixed(2)}}</td>          </tr>
+                        </tbody>
+                    </table>
+                    
+                </center>
+            <% } %>
+            
+            <br><hr>
+            
+            <% if (tn.tracker.c.mode() === "still") { %>
+                <button class="pure-button pull-right" data-on="click" data-call=".tracker.onClick_manualEntry">Add Manual Entry</button>
+            <% } %>
+            <h2>Timesheet</h2>
+            
+            {{{ uk.component("activityLog", {"activityList": tn.tracker.o.activityList()}) }}}
+        </div>
+        <div id="viewer" class="{{uk.if(tn.router.o.activeId() !== 'viewer', 'hidden')}}">
+            <h2>Timesheet Filtering</h2>
+            <p>Each of the filters below is optional. Please feel free to experiment.</p>
+            <div class="pure-form pure-g">
+                <div class="pure-u-1-2">
+                    <input value="{{tn.viewer.o.fromDateStr()}}" class="pure-input-1"
+                        placeholder="Eg. 11 Mar 2017"
+                        data-on="input" data-bind="value" data-to=".viewer.o.fromDateStr"
+                    >
+                    <span class="pure-form-message">From Date</span>
+                </div>
+                <div class="pure-u-1-2">
+                    <input value="{{tn.viewer.o.toDateStr()}}" class="pure-input-1" placeholder="Eg. 28 May 2017 3:33 PM"
+                        data-on="input" data-bind="value" data-to=".viewer.o.toDateStr"
+                    >
+                    <span class="pure-form-message">To Date</span>
+                </div>
+                <div class="pure-u-1">
+                    <p></p>
+                </div>
+                <div class="pure-u-1-4">
+                    <input value="{{tn.viewer.o.project()}}" class="pure-input-1" placeholder="Project" list="project_datalist"
+                        data-on="input" data-bind="value" data-to=".viewer.o.project"
+                    >
+                    <span class="pure-form-message">Project Name</span>
+                </div>
+                <div class="pure-u-1-4">
+                    <input value="{{tn.viewer.o.task()}}" class="pure-input-1" placeholder="Task" list="task_datalist"
+                        data-on="input" data-bind="value" data-to=".viewer.o.task"
+                    >
+                    <span class="pure-form-message">Task</span>
+                </div>
+                <div class="pure-u-1-4">
+                    <select value="{{tn.viewer.o.sortBy}}" class="pure-input-1"
+                        data-on="change" data-bind="value" data-to=".viewer.o.sortBy"
+                    >
+                        <option value=""></option>
+                        <% _.each(tn.viewer.sortBy_optionList, function (optionText) { %>
+                            <option value="{{optionText}}">{{optionText[0].toUpperCase() + optionText.slice(1)}}</option>
+                        <% }); %>
+                    </select>
+                    <span class="pure-form-message">Sort By</span>
+                </div>
+                <div class="pure-u-1-4">
+                    <select value="{{tn.viewer.o.sortOrder}}" class="pure-input-1"
+                        data-on="change" data-bind="value" data-to=".viewer.o.sortOrder"
+                    >
+                        <option value=""></option>
+                        <% _.each(tn.viewer.sortOrder_optionList, function (optionText) { %>
+                            <option value="{{optionText}}">{{optionText}}</option>
+                        <% }); %>
+                    </select>
+                    <span class="pure-form-message">Sort Order</span>
+                </div>
+            </div>
+            
+            <br><br>
+            {{{ uk.component("activityLog", {"activityList": tn.viewer.c.activityList()}) }}}
+            <p class="alignRight"><code>Total charge = ${{tn.viewer.c.totalCharge().toFixed(2)}}</code></p>
+            
+        </div>
+        <div id="syncer" class="{{uk.if(tn.router.o.activeId() !== 'syncer', 'hidden')}}">
+            <h2>Data Sync</h2>
+            <ul>
+                <li>
+                    To <b>save</b> (export) application data:<br>
+                    &gt; Copy the data below <code>(Ctrl+A, Ctrl+C)</code> and paste it <code>(Ctrl+V)</code> into a file.
+                </li>
+                <li>
+                    To <b>load</b> (import) saved data:<br>
+                    &gt; Copy <code>(Ctrl+A, Ctrl+C)</code> the saved data and paste it <code>(Ctrl+V)</code> below. Click <code>Sync</code>.
+                    
+                </li>
+            </ul>
+            <form class="pure-form" data-on="submit" data-call=".syncer.onSubmit_syncData">
+                <textarea name="newAppStateJson" class="pure-input-1" rows="15">{{uk.toPrettyJson(tn.syncer.getAppState())}}</textarea>
+                <p></p>
+                <button class="pure-button pure-button-primary">Sync!</button>
+            </form>
+        </div>
+        <div id="about" class="{{uk.if(tn.router.o.activeId() !== 'about', 'hidden')}}">
+        
+            <h3>What is TimeNinja?</h3>
+            <p>
+                TimeNinja is an open source JavaScript application, built using Underkick.
+                It helps freelancers &amp; SMBs track time spent on projects.
+            </p>
+            <h3>Why was it built?</h3>
+            <p>
+                Apart from the obvious object of helping freelancers track time, TimeNinja
+                was built to demonstrate the capabilities of Underkick.
+            </p>
+            <h3>What is Underkick?</h3>
+            <p>
+                Underkick is an open source, lightweight JavaScript framework, developed by Polydojo, Inc.
+                It is influenced by React and Knockout.
+            </p>
+            <h3>How can I use TimeNinja?</h3>
+            <p>
+                In your browser, press <code>Ctrl+S</code>. Save the page to your desired folder.
+                Then, to open the app, just (double) click on timeNinja.html. Done!
+            </p>
+        </div>
+        <div id="license" class="{{uk.if(tn.router.o.activeId() !== 'license', 'hidden')}}">
+            <h2>License</h2>
+            <pre>
+TimeNinja: A simple app for time tracking.
+Copyright (C) 2017  Polydojo, Inc.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with this program.  If not, see &lt;<a href="http://www.gnu.org/licenses/" target="_blank">http://www.gnu.org/licenses/</a>&gt;.
+            </pre>
+        </div>
+    </script>
+    
+    <script type="text/component" id="activityLog" data-as="submodel"> <!-- //> -->
+        <table class="pure-table pure-table-striped fullWidth small">
+            <thead>
+                <tr>
+                    <th>Project</th>  <th>Task</th>  <th>Start Time</th>  <th>Time Spent</th>  <th>Charge</th> <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% _.each(submodel.activityList, function (activity, activityIndex) { %>
+                    <tr>
+                        <td>{{activity.project}}</td>
+                        <td>{{activity.task}}</td>
+                        <td>{{tn.formatTimestamp(activity.startTime)}}</td>
+                        <td class="alignRight">{{tn.formatTimeDelta(activity.spentTime)}}</td>
+                        <td class="alignRight">{{activity.charge.toFixed(2)}}</td>
+                        <td>
+                            <% var attrDisabled = uk.if(tn.tracker.c.mode() !== "still", "disabled"); %>
+                            <button class="" {{attrDisabled}} data-on="click" data-call=".tracker.onClick_editActivity"
+                                data-arg=".tracker.o.activityList.{{activityIndex}}"
+                            >
+                                <small>Edit</small>
+                            </button>
+                            &nbsp;
+                            <button class="" {{attrDisabled}} data-on="click" data-call=".tracker.onClick_deleteActivity"
+                                data-arg=".tracker.o.activityList.{{activityIndex}}"
+                            >
+                                <small>Delete</small>
+                            </button>
+                        
+                        </td>
+                    </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </script>
+    
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/underscore-min.js"></script>
+    <script src="lib/underkick.js"></script>
+    
+    <script src="app.js"></script>
+</body>
+</html>

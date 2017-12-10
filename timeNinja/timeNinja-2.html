@@ -1,0 +1,73 @@
+<!--
+    TimeNinja: A simple app for time tracking.
+    Copyright (C) 2017  Polydojo, Inc.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="lib/pure-min.css">
+    <link rel="stylesheet" href="app.css">
+
+    <title>TimeNinja</title>
+</head>
+<body>
+    <div id="render-target"></div>
+    
+    <footer class="small centerAlign">
+        <br><br><br><br>
+        <hr>
+        <p>TimeNinja - Built with Underkick.</p>
+        <p>&copy; 2017 Polydojo, Inc.</p>
+        <p>
+    </footer>
+    
+    <script type="text/template" id="source-template">   <!-- //> -->
+        <header>
+            <h2>{{tn.APP_NAME}}</h2>
+            <div class="pure-menu pure-menu-horizontal">
+                <ul class="pure-menu-list">
+                    <li class="pure-menu-item"><a href="#tracker" class="pure-menu-link">Track</a></li>
+                    <li class="pure-menu-item"><a href="#viewer" class="pure-menu-link">Filter</a></li>
+                    <li class="pure-menu-item"><a href="#syncer" class="pure-menu-link">Sync</a></li>
+                    <li class="pure-menu-item"><a href="#about" class="pure-menu-link">About</a></li>
+                </ul>
+            </div>
+            <hr>
+        </header>
+        <div id="tracker">
+            <h2>TODO: Implment start-tracking form and stop-tracking button.</h2>           
+        </div>
+        <div id="viewer">
+            <h2>Todo: Implement timesheet filtering.</h2>
+        </div>
+        <div id="syncer">
+            <h2>Todo: Setup data syncing &amp; import/export.</h2>
+        </div>
+        <div id="about">
+            <h3>Todo: Write an introduction to TimeNinja.</h3>
+        </div>
+    </script>
+    
+    <script src="lib/jquery.min.js"></script>
+    <script src="lib/underscore-min.js"></script>
+    <script src="lib/underkick.js"></script>
+    
+    <script src="app.js"></script>
+</body>
+</html>
